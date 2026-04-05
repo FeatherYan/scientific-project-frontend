@@ -8,6 +8,7 @@ export type LoginParams = {
   role: 'user' | 'admin'
 }
 
-export function login(payload: LoginParams) {
-  return request.post<ApiResponse<AuthInfo>>('/auth/login', payload)
+export async function login(payload: LoginParams) {
+  const response = await request.post<ApiResponse<AuthInfo>>('/auth/login', payload)
+  return response.data.data
 }

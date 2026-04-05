@@ -3,11 +3,24 @@ import {
   SafetyCertificateOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Button, Card, Col, Form, Input, Row, Space, Typography } from 'antd'
-import { useNavigate } from 'react-router-dom'
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  Radio,
+  Row,
+  Space,
+  Typography,
+} from 'antd'
+import { useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ROLE_LABEL_MAP, ROLES, type Role } from '../../constants/role'
-import { ROUTE_PATHS } from '../../constants/route'
 import { getDefaultHomePathByRole } from '../../permission/access'
+import { useAuth } from '../../hooks/useAuth'
+import { useLogin } from '../../hooks/useLogin'
 import { useAppDispatch } from '../../store/hooks'
 import { loginSuccess } from '../../store/slices/authSlice'
 
@@ -23,22 +36,39 @@ const roleOptions: Array<{ role: Role; tip: string }> = [
 ]
 
 export default function LoginPage() {
+  const [form] = Form.useForm()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
+  const { isAuthenticated, role } = useAuth()
+  const loginMutation = useLogin()
 
-  const handleLogin = (role: Role) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(getDefaultHomePathByRole(role), { replace: true })
+    }
+  }, [isAuthenticated, navigate, role])
+
+  const handleLogin = async (values: {
+    username: string
+    password: string
+    role: Role
+  }) => {
+    const authInfo = await loginMutation.mutateAsync(values)
+
     dispatch(
       loginSuccess({
-        token: `${role}-token`,
-        role,
-        userInfo: {
-          id: role === ROLES.user ? 'u_001' : 'a_001',
-          name: role === ROLES.user ? '张老师' : '系统管理员',
-        },
+        token: authInfo.token,
+        role: authInfo.role as Role,
+        userInfo: authInfo.userInfo!,
       }),
     )
 
-    navigate(getDefaultHomePathByRole(role), { replace: true })
+    const redirectPath = location.state?.redirect as string | undefined
+
+    navigate(redirectPath || getDefaultHomePathByRole(authInfo.role), {
+      replace: true,
+    })
   }
 
   return (
@@ -62,52 +92,101 @@ export default function LoginPage() {
               账号登录
             </Typography.Title>
             <Typography.Text type="secondary">
-              当前阶段使用角色快捷登录，帮助我们先验证鉴权与路由骨架。
+              当前阶段使用 MSW 模拟登录接口，帮助我们先打通登录鉴权闭环。
             </Typography.Text>
           </div>
 
-          <Form layout="vertical">
-            <Form.Item label="用户名">
+          <Alert
+            type="info"
+            showIcon
+            message="Mock 账号"
+            description="普通用户：teacher / 123456；管理员：admin / 123456"
+          />
+
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{
+              username: 'teacher',
+              password: '123456',
+              role: ROLES.user,
+            }}
+            onFinish={(values) => void handleLogin(values)}
+          >
+            <Form.Item
+              label="用户名"
+              name="username"
+              rules={[{ required: true, message: '请输入用户名' }]}
+            >
               <Input prefix={<UserOutlined />} placeholder="请输入用户名" />
             </Form.Item>
-            <Form.Item label="密码">
+            <Form.Item
+              label="密码"
+              name="password"
+              rules={[{ required: true, message: '请输入密码' }]}
+            >
               <Input.Password
                 prefix={<LockOutlined />}
                 placeholder="请输入密码"
               />
             </Form.Item>
-          </Form>
+            <Form.Item
+              label="登录角色"
+              name="role"
+              rules={[{ required: true, message: '请选择登录角色' }]}
+            >
+              <Radio.Group optionType="button" buttonStyle="solid">
+                {roleOptions.map((option) => (
+                  <Radio.Button value={option.role} key={option.role}>
+                    {ROLE_LABEL_MAP[option.role]}
+                  </Radio.Button>
+                ))}
+              </Radio.Group>
+            </Form.Item>
 
-          <Row gutter={[12, 12]}>
-            {roleOptions.map((option) => (
-              <Col xs={24} md={12} key={option.role}>
-                <Card size="small" className="role-card">
-                  <Space direction="vertical" size={12}>
-                    <Space>
-                      <SafetyCertificateOutlined />
-                      <Typography.Text strong>
-                        {ROLE_LABEL_MAP[option.role]}
+            <Row gutter={[12, 12]}>
+              {roleOptions.map((option) => (
+                <Col xs={24} md={12} key={option.role}>
+                  <Card
+                    size="small"
+                    className="role-card"
+                    hoverable
+                    onClick={() =>
+                      form.setFieldsValue({
+                        username: option.role === ROLES.user ? 'teacher' : 'admin',
+                        password: '123456',
+                        role: option.role,
+                      })
+                    }
+                  >
+                    <Space direction="vertical" size={12}>
+                      <Space>
+                        <SafetyCertificateOutlined />
+                        <Typography.Text strong>
+                          {ROLE_LABEL_MAP[option.role]}
+                        </Typography.Text>
+                      </Space>
+                      <Typography.Text type="secondary">
+                        {option.tip}
+                      </Typography.Text>
+                      <Typography.Text type="secondary">
+                        点击卡片可自动填充该角色示例账号。
                       </Typography.Text>
                     </Space>
-                    <Typography.Text type="secondary">
-                      {option.tip}
-                    </Typography.Text>
-                    <Button
-                      type="primary"
-                      block
-                      onClick={() => handleLogin(option.role)}
-                    >
-                      以{ROLE_LABEL_MAP[option.role]}身份进入
-                    </Button>
-                  </Space>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
 
-          <Button type="link" onClick={() => navigate(ROUTE_PATHS.root)}>
-            直接查看系统骨架
-          </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={loginMutation.isPending}
+            >
+              登录进入系统
+            </Button>
+          </Form>
         </Space>
       </Card>
     </div>

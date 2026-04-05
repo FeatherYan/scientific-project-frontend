@@ -1,5 +1,6 @@
 import { message } from 'antd'
 import type {
+  AxiosError,
   AxiosInstance,
   AxiosResponse,
   InternalAxiosRequestConfig,
@@ -22,8 +23,11 @@ export function attachRequestInterceptors(instance: AxiosInstance) {
 export function attachResponseInterceptors(instance: AxiosInstance) {
   instance.interceptors.response.use(
     (response: AxiosResponse<ApiResponse<unknown>>) => response,
-    (error: Error) => {
-      message.error(error.message || '请求失败，请稍后重试')
+    (error: AxiosError<ApiResponse<null>>) => {
+      const errorMessage =
+        error.response?.data?.message || error.message || '请求失败，请稍后重试'
+
+      message.error(errorMessage)
       return Promise.reject(error)
     },
   )
