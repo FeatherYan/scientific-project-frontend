@@ -31,8 +31,8 @@ export default function ProjectDetailPage() {
       return
     }
 
-    await applyMutation.mutateAsync(project.id)
-    navigate(ROUTE_PATHS.projectMine)
+    const draft = await applyMutation.mutateAsync(project.id)
+    navigate(ROUTE_PATHS.projectEdit.replace(':id', draft.id))
   }
 
   return (

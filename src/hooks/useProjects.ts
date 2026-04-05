@@ -3,12 +3,14 @@ import { message } from 'antd'
 import {
   applyProjectOpportunity,
   deleteProject,
+  getProjectDetail,
   getMyProjectList,
   getProjectOpportunityDetail,
   getProjectOpportunityList,
+  saveProjectDraft,
   submitProject,
 } from '../api/project'
-import type { ProjectListParams } from '../types/project'
+import type { ProjectListParams, SaveProjectPayload } from '../types/project'
 
 const projectKeys = {
   all: ['projects'] as const,
@@ -17,6 +19,7 @@ const projectKeys = {
   opportunityDetail: (id: string) =>
     [...projectKeys.all, 'opportunity-detail', id] as const,
   myList: (params: ProjectListParams) => [...projectKeys.all, 'my-list', params] as const,
+  detail: (id: string) => [...projectKeys.all, 'detail', id] as const,
 }
 
 export function useProjectOpportunityList(params: ProjectListParams) {
@@ -50,6 +53,28 @@ export function useMyProjectList(params: ProjectListParams) {
   return useQuery({
     queryKey: projectKeys.myList(params),
     queryFn: () => getMyProjectList(params),
+  })
+}
+
+export function useProjectDetail(id: string) {
+  return useQuery({
+    queryKey: projectKeys.detail(id),
+    queryFn: () => getProjectDetail(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useSaveProjectDraft() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: SaveProjectPayload }) =>
+      saveProjectDraft(id, payload),
+    onSuccess: (data) => {
+      message.success('草稿已保存')
+      void queryClient.invalidateQueries({ queryKey: projectKeys.all })
+      void queryClient.setQueryData(projectKeys.detail(data.id), data)
+    },
   })
 }
 

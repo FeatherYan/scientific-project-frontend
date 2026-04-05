@@ -1,6 +1,10 @@
 import { request } from '../request'
 import type { ApiResponse } from '../request/types'
-import type { ProjectListParams, ProjectRecord } from '../types/project'
+import type {
+  ProjectListParams,
+  ProjectRecord,
+  SaveProjectPayload,
+} from '../types/project'
 import type { ProjectOpportunity } from '../types/projectOpportunity'
 
 export async function getProjectOpportunityList(params: ProjectListParams = {}) {
@@ -31,6 +35,19 @@ export async function getMyProjectList(params: ProjectListParams = {}) {
   const response = await request.get<ApiResponse<ProjectRecord[]>>('/projects', {
     params,
   })
+  return response.data.data
+}
+
+export async function getProjectDetail(id: string) {
+  const response = await request.get<ApiResponse<ProjectRecord>>(`/projects/${id}`)
+  return response.data.data
+}
+
+export async function saveProjectDraft(id: string, payload: SaveProjectPayload) {
+  const response = await request.put<ApiResponse<ProjectRecord>>(
+    `/projects/${id}`,
+    payload,
+  )
   return response.data.data
 }
 

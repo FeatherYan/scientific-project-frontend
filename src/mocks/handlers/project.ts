@@ -1,5 +1,6 @@
 import { delay, http, HttpResponse } from 'msw'
 import { PROJECT_STATUS } from '../../constants/project'
+import type { SaveProjectPayload } from '../../types/project'
 import { mockProjects } from '../data/projects'
 import { mockProjectOpportunities } from '../data/projectOpportunities'
 
@@ -87,6 +88,16 @@ export const projectHandlers = [
       status: PROJECT_STATUS.draft,
       applicantId: 'u_001',
       applicantName: '张老师',
+      department: '',
+      phone: '',
+      email: '',
+      researchBasis: '',
+      researchContent: '',
+      expectedOutcome: '',
+      budgetDescription: '',
+      startDate: '',
+      endDate: '',
+      sourceOpportunityId: sourceProject.id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -129,6 +140,64 @@ export const projectHandlers = [
     })
   }),
 
+  http.get('/api/projects/:id', async ({ params, request }) => {
+    await delay(300)
+
+    const currentUserId = getCurrentUserId(request)
+    const matchedProject = mockProjects.find(
+      (project) => project.id === params.id && project.applicantId === currentUserId,
+    )
+
+    if (!matchedProject) {
+      return HttpResponse.json(
+        { code: 404, message: '申报记录不存在', data: null },
+        { status: 404 },
+      )
+    }
+
+    return HttpResponse.json({
+      code: 0,
+      message: '获取成功',
+      data: matchedProject,
+    })
+  }),
+
+  http.put('/api/projects/:id', async ({ params, request }) => {
+    await delay(400)
+
+    const body = (await request.json()) as SaveProjectPayload
+    const matchedProject = mockProjects.find((project) => project.id === params.id)
+
+    if (!matchedProject) {
+      return HttpResponse.json(
+        { code: 404, message: '申报记录不存在', data: null },
+        { status: 404 },
+      )
+    }
+
+    matchedProject.title = body.title
+    matchedProject.code = body.code
+    matchedProject.category = body.category
+    matchedProject.amount = body.amount
+    matchedProject.applicantName = body.applicantName
+    matchedProject.department = body.department
+    matchedProject.phone = body.phone
+    matchedProject.email = body.email
+    matchedProject.researchBasis = body.researchBasis
+    matchedProject.researchContent = body.researchContent
+    matchedProject.expectedOutcome = body.expectedOutcome
+    matchedProject.budgetDescription = body.budgetDescription
+    matchedProject.startDate = body.startDate
+    matchedProject.endDate = body.endDate
+    matchedProject.updatedAt = new Date().toISOString()
+
+    return HttpResponse.json({
+      code: 0,
+      message: '草稿已保存',
+      data: matchedProject,
+    })
+  }),
+
   http.post('/api/projects/:id/submit', async ({ params }) => {
     await delay(400)
 
@@ -147,6 +216,25 @@ export const projectHandlers = [
     ) {
       return HttpResponse.json(
         { code: 400, message: '当前状态不允许提交', data: null },
+        { status: 400 },
+      )
+    }
+
+    const requiredFields = [
+      matchedProject.department,
+      matchedProject.phone,
+      matchedProject.email,
+      matchedProject.researchBasis,
+      matchedProject.researchContent,
+      matchedProject.expectedOutcome,
+      matchedProject.budgetDescription,
+      matchedProject.startDate,
+      matchedProject.endDate,
+    ]
+
+    if (requiredFields.some((field) => !field)) {
+      return HttpResponse.json(
+        { code: 400, message: '请先完善表单后再提交', data: null },
         { status: 400 },
       )
     }
