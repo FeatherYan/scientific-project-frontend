@@ -1,12 +1,10 @@
 import { request } from '../request'
 import type { ApiResponse } from '../request/types'
+import type { ProjectListParams, ProjectRecord } from '../types/project'
 
-export type ApprovalRecord = {
-  id: string
-  projectTitle: string
-  status: string
-}
-
-export function getApprovalList() {
-  return request.get<ApiResponse<ApprovalRecord[]>>('/approvals')
+export async function getApprovalList(params: ProjectListParams = {}) {
+  const response = await request.get<ApiResponse<ProjectRecord[]>>('/approvals', {
+    params,
+  })
+  return response.data.data
 }

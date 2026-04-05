@@ -158,6 +158,35 @@ export const projectHandlers = [
     })
   }),
 
+  http.get('/api/approvals', async ({ request }) => {
+    const url = new URL(request.url)
+    const keyword = url.searchParams.get('keyword')?.trim() ?? ''
+    const status = url.searchParams.get('status')?.trim() ?? ''
+
+    await delay(400)
+
+    const data = mockProjects
+      .filter((project) => project.status !== PROJECT_STATUS.draft)
+      .filter((project) => {
+        const matchKeyword =
+          !keyword ||
+          project.title.includes(keyword) ||
+          project.code.toLowerCase().includes(keyword.toLowerCase()) ||
+          project.applicantName.includes(keyword)
+
+        const matchStatus = !status || project.status === status
+
+        return matchKeyword && matchStatus
+      })
+      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+
+    return HttpResponse.json({
+      code: 0,
+      message: '获取成功',
+      data,
+    })
+  }),
+
   http.get('/api/projects/:id', async ({ params, request }) => {
     await delay(300)
 
