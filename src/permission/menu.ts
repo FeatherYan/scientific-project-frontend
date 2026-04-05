@@ -32,17 +32,10 @@ const menuRouteTree: MenuRoute[] = [
     children: [
       {
         key: '/projects/list',
-        label: '申报列表',
+        label: '可申报项目',
         iconName: 'project',
         roles: ['user'],
         requiredPermissions: ['project:list'],
-      },
-      {
-        key: '/projects/new',
-        label: '新建申报',
-        iconName: 'form',
-        roles: ['user'],
-        requiredPermissions: ['project:create'],
       },
       {
         key: '/projects/mine',

@@ -46,7 +46,9 @@ export function BasicLayout() {
 
   useEffect(() => {
     if (location.pathname.startsWith('/projects/')) {
-      setSelectedKeys([location.pathname === '/projects/mine' ? '/projects/mine' : '/projects/list'])
+      setSelectedKeys([
+        location.pathname === '/projects/mine' ? '/projects/mine' : '/projects/list',
+      ])
       return
     }
 

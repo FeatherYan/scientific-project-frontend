@@ -14,6 +14,7 @@ import { selectAuth } from '../store/slices/authSlice'
 const LoginPage = lazy(() => import('../pages/login'))
 const DashboardPage = lazy(() => import('../pages/dashboard'))
 const ProjectListPage = lazy(() => import('../pages/project/list'))
+const ProjectDetailPage = lazy(() => import('../pages/project/detail'))
 const ProjectFormPage = lazy(() => import('../pages/project/form'))
 const MyProjectsPage = lazy(() => import('../pages/project/mine'))
 const ApprovalListPage = lazy(() => import('../pages/approval/list'))
@@ -74,6 +75,10 @@ export const router = createBrowserRouter([
           {
             path: 'projects/list',
             element: withSuspense(<ProjectListPage />),
+          },
+          {
+            path: 'projects/:id',
+            element: withSuspense(<ProjectDetailPage />),
           },
           {
             path: 'projects/new',

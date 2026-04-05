@@ -3,6 +3,7 @@ export const ROUTE_PATHS = {
   login: '/login',
   dashboard: '/dashboard',
   projectList: '/projects/list',
+  projectDetail: '/projects/:id',
   projectNew: '/projects/new',
   projectEdit: '/projects/:id/edit',
   projectMine: '/projects/mine',
