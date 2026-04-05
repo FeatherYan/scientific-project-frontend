@@ -80,6 +80,10 @@ export default function ProjectFormPage() {
   const project = projectDetailQuery.data
   const editable = project ? canEditProject(project) : false
   const submittable = project ? canSubmitProject(project) : false
+  const pageTitle = editable ? '编辑申报' : '申报详情'
+  const pageDescription = editable
+    ? '这一页用于补充和完善申报草稿。保存草稿允许阶段性填写，提交申报时会进行完整校验。'
+    : '这一页用于查看申报记录详情。当前记录已进入后续流程，因此表单内容只读展示。'
 
   useEffect(() => {
     if (project) {
@@ -138,10 +142,10 @@ export default function ProjectFormPage() {
             返回我的申报
           </Button>
           <Typography.Title level={3} style={{ margin: 0 }}>
-            项目申报表单
+            {pageTitle}
           </Typography.Title>
           <Typography.Text type="secondary">
-            这一页用于补充和完善申报草稿。保存草稿允许阶段性填写，提交申报时会进行完整校验。
+            {pageDescription}
           </Typography.Text>
         </Space>
       </Card>
@@ -169,7 +173,7 @@ export default function ProjectFormPage() {
                 description={
                   editable
                     ? '保存草稿不会校验所有字段，提交申报会要求负责人信息、研究内容、预算说明和起止时间全部填写完整。'
-                    : '当前记录已进入后续流程，表单仅供查看。如需修改，请等待退回后再编辑。'
+                    : '当前记录已进入后续流程，因此当前页面只提供查看能力。如需修改，请等待退回后再处理。'
                 }
               />
             </Card>

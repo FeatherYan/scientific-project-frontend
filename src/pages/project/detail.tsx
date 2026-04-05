@@ -1,5 +1,6 @@
 import { ArrowLeftOutlined, FormOutlined } from '@ant-design/icons'
 import {
+  Alert,
   Button,
   Card,
   Descriptions,
@@ -9,10 +10,12 @@ import {
   Typography,
 } from 'antd'
 import { useNavigate, useParams } from 'react-router-dom'
+import { PROJECT_STATUS_META } from '../../constants/project'
 import { ROUTE_PATHS } from '../../constants/route'
 import { PERMISSIONS } from '../../constants/permission'
 import {
   useApplyProjectOpportunity,
+  useMyProjectByOpportunity,
   useProjectOpportunityDetail,
 } from '../../hooks/useProjects'
 import { PermissionButton } from '../../components/business/PermissionButton'
@@ -22,9 +25,11 @@ export default function ProjectDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const projectDetailQuery = useProjectOpportunityDetail(id)
+  const myProjectQuery = useMyProjectByOpportunity(id)
   const applyMutation = useApplyProjectOpportunity()
 
   const project = projectDetailQuery.data
+  const myProject = myProjectQuery.data
 
   const handleApply = async () => {
     if (!project) {
@@ -33,6 +38,14 @@ export default function ProjectDetailPage() {
 
     const draft = await applyMutation.mutateAsync(project.id)
     navigate(ROUTE_PATHS.projectEdit.replace(':id', draft.id))
+  }
+
+  const handleViewMyProject = () => {
+    if (!myProject) {
+      return
+    }
+
+    navigate(ROUTE_PATHS.projectEdit.replace(':id', myProject.id))
   }
 
   return (
@@ -87,18 +100,41 @@ export default function ProjectDetailPage() {
                 dataSource={project.requirements}
                 renderItem={(item) => <List.Item>{item}</List.Item>}
               />
+              {myProject ? (
+                <Alert
+                  type="success"
+                  showIcon
+                  style={{ marginTop: 16 }}
+                  message="你已申报过该项目"
+                  description={`当前已有一条申报记录，状态为“${PROJECT_STATUS_META[myProject.status].label}”。可直接进入该记录继续查看或编辑。`}
+                />
+              ) : (
+                <Alert
+                  type="info"
+                  showIcon
+                  style={{ marginTop: 16 }}
+                  message="你还没有申报该项目"
+                  description="如果确认符合申报要求，可以点击“发起申报”创建一条草稿记录。"
+                />
+              )}
               <Space style={{ marginTop: 16 }}>
                 <PermissionButton
                   permission={PERMISSIONS.projectCreate}
                   type="primary"
                   icon={<FormOutlined />}
+                  disabled={Boolean(myProject)}
+                  tooltip={myProject ? '你已经申报过该项目，可直接查看对应记录' : undefined}
                   loading={applyMutation.isPending}
                   onClick={() => void handleApply()}
                 >
                   发起申报
                 </PermissionButton>
-                <Button onClick={() => navigate(ROUTE_PATHS.projectMine)}>
-                  查看我的申报
+                <Button
+                  loading={myProjectQuery.isLoading || myProjectQuery.isFetching}
+                  disabled={!myProject}
+                  onClick={handleViewMyProject}
+                >
+                  {myProject ? '查看该项目的我的申报' : '尚未申报该项目'}
                 </Button>
               </Space>
             </Card>

@@ -4,6 +4,7 @@ import {
   applyProjectOpportunity,
   deleteProject,
   getProjectDetail,
+  getMyProjectByOpportunity,
   getMyProjectList,
   getProjectOpportunityDetail,
   getProjectOpportunityList,
@@ -18,6 +19,8 @@ const projectKeys = {
     [...projectKeys.all, 'opportunity-list', params] as const,
   opportunityDetail: (id: string) =>
     [...projectKeys.all, 'opportunity-detail', id] as const,
+  myProjectByOpportunity: (id: string) =>
+    [...projectKeys.all, 'my-project-by-opportunity', id] as const,
   myList: (params: ProjectListParams) => [...projectKeys.all, 'my-list', params] as const,
   detail: (id: string) => [...projectKeys.all, 'detail', id] as const,
 }
@@ -33,6 +36,14 @@ export function useProjectOpportunityDetail(id: string) {
   return useQuery({
     queryKey: projectKeys.opportunityDetail(id),
     queryFn: () => getProjectOpportunityDetail(id),
+    enabled: Boolean(id),
+  })
+}
+
+export function useMyProjectByOpportunity(id: string) {
+  return useQuery({
+    queryKey: projectKeys.myProjectByOpportunity(id),
+    queryFn: () => getMyProjectByOpportunity(id),
     enabled: Boolean(id),
   })
 }

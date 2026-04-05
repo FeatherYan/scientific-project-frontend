@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, SendOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EyeOutlined, SendOutlined } from '@ant-design/icons'
 import {
   Button,
   Card,
@@ -6,7 +6,7 @@ import {
   Empty,
   Form,
   Input,
-  Modal,
+  Popconfirm,
   Row,
   Select,
   Space,
@@ -26,7 +26,6 @@ import { formatDateTime } from '../../utils/date'
 import {
   PROJECT_ACTION_PERMISSION_MAP,
   canDeleteProject,
-  canEditProject,
   canSubmitProject,
   getActionDisabledReason,
 } from '../../utils/project'
@@ -94,44 +93,77 @@ export default function MyProjectsPage() {
       {
         title: '操作',
         key: 'actions',
-        width: 250,
+        width: 320,
         render: (_, record) => (
           <Space size={4} wrap>
-            <PermissionButton
-              permission={PROJECT_ACTION_PERMISSION_MAP.edit}
+            <Button
               type="link"
-              icon={<EditOutlined />}
-              disabled={!canEditProject(record)}
-              tooltip={getActionDisabledReason(record, 'edit')}
+              icon={<EyeOutlined />}
               onClick={() =>
                 navigate(ROUTE_PATHS.projectEdit.replace(':id', record.id))
               }
             >
-              编辑
-            </PermissionButton>
-            <PermissionButton
-              permission={PROJECT_ACTION_PERMISSION_MAP.submit}
-              type="link"
-              icon={<SendOutlined />}
-              disabled={!canSubmitProject(record)}
-              tooltip={getActionDisabledReason(record, 'submit')}
-              loading={submitProjectMutation.isPending}
-              onClick={() => void handleSubmit(record)}
-            >
-              提交
-            </PermissionButton>
-            <PermissionButton
-              permission={PROJECT_ACTION_PERMISSION_MAP.delete}
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-              disabled={!canDeleteProject(record)}
-              tooltip={getActionDisabledReason(record, 'delete')}
-              loading={deleteProjectMutation.isPending}
-              onClick={() => void handleDelete(record)}
-            >
-              删除
-            </PermissionButton>
+              查看
+            </Button>
+            {canSubmitProject(record) ? (
+              <Popconfirm
+                title="确认提交项目？"
+                description={`提交后，${record.title} 将进入审批流程，无法继续编辑。`}
+                okText="确认提交"
+                cancelText="取消"
+                onConfirm={() => void handleSubmit(record)}
+              >
+                <PermissionButton
+                  permission={PROJECT_ACTION_PERMISSION_MAP.submit}
+                  type="link"
+                  icon={<SendOutlined />}
+                  loading={submitProjectMutation.isPending}
+                >
+                  提交
+                </PermissionButton>
+              </Popconfirm>
+            ) : (
+              <PermissionButton
+                permission={PROJECT_ACTION_PERMISSION_MAP.submit}
+                type="link"
+                icon={<SendOutlined />}
+                disabled
+                tooltip={getActionDisabledReason(record, 'submit')}
+              >
+                提交
+              </PermissionButton>
+            )}
+            {canDeleteProject(record) ? (
+              <Popconfirm
+                title="确认删除草稿？"
+                description={`删除后无法恢复，是否删除 ${record.title}？`}
+                okText="确认删除"
+                cancelText="取消"
+                okButtonProps={{ danger: true }}
+                onConfirm={() => void handleDelete(record)}
+              >
+                <PermissionButton
+                  permission={PROJECT_ACTION_PERMISSION_MAP.delete}
+                  type="link"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deleteProjectMutation.isPending}
+                >
+                  删除
+                </PermissionButton>
+              </Popconfirm>
+            ) : (
+              <PermissionButton
+                permission={PROJECT_ACTION_PERMISSION_MAP.delete}
+                type="link"
+                danger
+                icon={<DeleteOutlined />}
+                disabled
+                tooltip={getActionDisabledReason(record, 'delete')}
+              >
+                删除
+              </PermissionButton>
+            )}
           </Space>
         ),
       },
@@ -155,28 +187,11 @@ export default function MyProjectsPage() {
   }
 
   const handleSubmit = async (project: ProjectRecord) => {
-    Modal.confirm({
-      title: '确认提交项目？',
-      content: `提交后，${project.title} 将进入审批流程，无法继续编辑。`,
-      okText: '确认提交',
-      cancelText: '取消',
-      onOk: async () => {
-        await submitProjectMutation.mutateAsync(project.id)
-      },
-    })
+    await submitProjectMutation.mutateAsync(project.id)
   }
 
   const handleDelete = async (project: ProjectRecord) => {
-    Modal.confirm({
-      title: '确认删除草稿？',
-      content: `删除后无法恢复，是否删除 ${project.title}？`,
-      okText: '确认删除',
-      cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        await deleteProjectMutation.mutateAsync(project.id)
-      },
-    })
+    await deleteProjectMutation.mutateAsync(project.id)
   }
 
   return (

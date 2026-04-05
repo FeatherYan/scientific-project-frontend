@@ -43,6 +43,13 @@ export async function getProjectDetail(id: string) {
   return response.data.data
 }
 
+export async function getMyProjectByOpportunity(opportunityId: string) {
+  const response = await request.get<ApiResponse<ProjectRecord | null>>(
+    `/project-opportunities/${opportunityId}/my-project`,
+  )
+  return response.data.data
+}
+
 export async function saveProjectDraft(id: string, payload: SaveProjectPayload) {
   const response = await request.put<ApiResponse<ProjectRecord>>(
     `/projects/${id}`,

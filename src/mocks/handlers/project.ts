@@ -111,6 +111,24 @@ export const projectHandlers = [
     })
   }),
 
+  http.get('/api/project-opportunities/:id/my-project', async ({ params, request }) => {
+    await delay(200)
+
+    const currentUserId = getCurrentUserId(request)
+    const matchedProject =
+      mockProjects.find(
+        (project) =>
+          project.sourceOpportunityId === params.id &&
+          project.applicantId === currentUserId,
+      ) ?? null
+
+    return HttpResponse.json({
+      code: 0,
+      message: '获取成功',
+      data: matchedProject,
+    })
+  }),
+
   http.get('/api/projects', async ({ request }) => {
     const url = new URL(request.url)
     const keyword = url.searchParams.get('keyword')?.trim() ?? ''
