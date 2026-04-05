@@ -5,14 +5,16 @@ import {
   DashboardOutlined,
   LogoutOutlined,
   ProjectOutlined,
+  ReloadOutlined,
   SafetyCertificateOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import { Avatar, Button, Dropdown, Layout, Menu, Space, Typography } from 'antd'
+import { Avatar, Button, Dropdown, Layout, Menu, Modal, Space, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ROUTE_PATHS } from '../../constants/route'
 import { useAuth } from '../../hooks/useAuth'
+import { clearMockState } from '../../mocks/utils/storage'
 import { getMenuItems, type AppMenuItem } from '../../permission/menu'
 
 const { Header, Content, Sider } = Layout
@@ -43,6 +45,19 @@ export function BasicLayout() {
   const location = useLocation()
   const { userInfo, role, roleLabel, permissions, logout } = useAuth()
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+
+  const handleResetMockData = () => {
+    Modal.confirm({
+      title: '重置演示数据？',
+      content: '这会清空当前 mock 项目数据和通知数据，并刷新页面恢复到初始状态。',
+      okText: '确认重置',
+      cancelText: '取消',
+      onOk: () => {
+        clearMockState()
+        window.location.reload()
+      },
+    })
+  }
 
   useEffect(() => {
     if (location.pathname.startsWith('/projects/')) {
@@ -95,6 +110,12 @@ export function BasicLayout() {
                     icon: <BellOutlined />,
                     label: '通知中心',
                     onClick: () => navigate(ROUTE_PATHS.notificationList),
+                  },
+                  {
+                    key: 'reset-mock',
+                    icon: <ReloadOutlined />,
+                    label: '重置演示数据',
+                    onClick: handleResetMockData,
                   },
                   {
                     key: 'logout',

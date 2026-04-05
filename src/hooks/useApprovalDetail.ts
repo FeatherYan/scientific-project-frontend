@@ -29,6 +29,7 @@ export function useApproveProject() {
       message.success('审批已通过')
       void queryClient.invalidateQueries({ queryKey: ['approvals'] })
       void queryClient.invalidateQueries({ queryKey: ['projects'] })
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] })
       void queryClient.setQueryData(approvalDetailKeys.detail(data.id), data)
     },
   })
@@ -44,6 +45,7 @@ export function useRejectProject() {
       message.success('项目已退回申请人')
       void queryClient.invalidateQueries({ queryKey: ['approvals'] })
       void queryClient.invalidateQueries({ queryKey: ['projects'] })
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] })
       void queryClient.setQueryData(approvalDetailKeys.detail(data.id), data)
     },
   })

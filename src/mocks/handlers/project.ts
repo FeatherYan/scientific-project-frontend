@@ -1,7 +1,11 @@
 import { delay, http, HttpResponse } from 'msw'
 import { PROJECT_STATUS } from '../../constants/project'
 import type { SaveProjectPayload } from '../../types/project'
-import { mockProjects } from '../data/projects'
+import {
+  mockNotifications,
+  persistMockNotifications,
+} from '../data/notifications'
+import { mockProjects, persistMockProjects } from '../data/projects'
 import { mockProjectOpportunities } from '../data/projectOpportunities'
 
 function getCurrentUserId(request: Request) {
@@ -16,6 +20,28 @@ function getCurrentUserId(request: Request) {
   }
 
   return ''
+}
+
+function createApprovalNotification(params: {
+  userId: string
+  projectId: string
+  title: string
+  content: string
+}) {
+  const nextId = `n_${String(mockNotifications.length + 1).padStart(3, '0')}`
+
+  mockNotifications.unshift({
+    id: nextId,
+    userId: params.userId,
+    title: params.title,
+    content: params.content,
+    type: 'approval',
+    read: false,
+    createdAt: new Date().toISOString(),
+    relatedProjectId: params.projectId,
+  })
+
+  persistMockNotifications()
 }
 
 export const projectHandlers = [
@@ -103,6 +129,7 @@ export const projectHandlers = [
     }
 
     mockProjects.unshift(createdProject)
+    persistMockProjects()
 
     return HttpResponse.json({
       code: 0,
@@ -236,6 +263,13 @@ export const projectHandlers = [
     matchedProject.reviewedBy = '系统管理员'
     matchedProject.reviewedAt = new Date().toISOString()
     matchedProject.updatedAt = new Date().toISOString()
+    persistMockProjects()
+    createApprovalNotification({
+      userId: matchedProject.applicantId,
+      projectId: matchedProject.id,
+      title: '项目已通过审批',
+      content: `你提交的“${matchedProject.title}”已审批通过，请关注后续安排。`,
+    })
 
     return HttpResponse.json({
       code: 0,
@@ -279,6 +313,13 @@ export const projectHandlers = [
     matchedProject.reviewedBy = '系统管理员'
     matchedProject.reviewedAt = new Date().toISOString()
     matchedProject.updatedAt = new Date().toISOString()
+    persistMockProjects()
+    createApprovalNotification({
+      userId: matchedProject.applicantId,
+      projectId: matchedProject.id,
+      title: '项目已被退回修改',
+      content: `“${matchedProject.title}”已退回，请根据审批意见补充后重新提交。`,
+    })
 
     return HttpResponse.json({
       code: 0,
@@ -337,6 +378,7 @@ export const projectHandlers = [
     matchedProject.startDate = body.startDate
     matchedProject.endDate = body.endDate
     matchedProject.updatedAt = new Date().toISOString()
+    persistMockProjects()
 
     return HttpResponse.json({
       code: 0,
@@ -388,6 +430,7 @@ export const projectHandlers = [
 
     matchedProject.status = PROJECT_STATUS.submitted
     matchedProject.updatedAt = new Date().toISOString()
+    persistMockProjects()
 
     return HttpResponse.json({
       code: 0,
@@ -417,6 +460,7 @@ export const projectHandlers = [
 
     const deletedId = mockProjects[projectIndex].id
     mockProjects.splice(projectIndex, 1)
+    persistMockProjects()
 
     return HttpResponse.json({
       code: 0,

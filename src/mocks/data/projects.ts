@@ -1,7 +1,8 @@
 import { PROJECT_STATUS } from '../../constants/project'
 import type { ProjectRecord } from '../../types/project'
+import { loadMockState, MOCK_STORAGE_KEYS, saveMockState } from '../utils/storage'
 
-export let mockProjects: ProjectRecord[] = [
+const initialProjects: ProjectRecord[] = [
   {
     id: 'p_001',
     title: '面向高校科研管理的智能申报平台研究',
@@ -141,3 +142,14 @@ export let mockProjects: ProjectRecord[] = [
     updatedAt: '2026-04-01T10:00:00+08:00',
   },
 ]
+
+const PROJECTS_STORAGE_KEY = MOCK_STORAGE_KEYS.projects
+
+export let mockProjects: ProjectRecord[] = loadMockState({
+  key: PROJECTS_STORAGE_KEY,
+  fallback: initialProjects,
+})
+
+export function persistMockProjects() {
+  saveMockState(PROJECTS_STORAGE_KEY, mockProjects)
+}
