@@ -19,6 +19,9 @@ export type ProjectRecord = {
   startDate?: string
   endDate?: string
   sourceOpportunityId?: string
+  approvalComment?: string
+  reviewedBy?: string
+  reviewedAt?: string
   createdAt: string
   updatedAt: string
 }

@@ -187,6 +187,106 @@ export const projectHandlers = [
     })
   }),
 
+  http.get('/api/approvals/:id', async ({ params }) => {
+    await delay(300)
+
+    const matchedProject = mockProjects.find(
+      (project) => project.id === params.id && project.status !== PROJECT_STATUS.draft,
+    )
+
+    if (!matchedProject) {
+      return HttpResponse.json(
+        { code: 404, message: '审批记录不存在', data: null },
+        { status: 404 },
+      )
+    }
+
+    return HttpResponse.json({
+      code: 0,
+      message: '获取成功',
+      data: matchedProject,
+    })
+  }),
+
+  http.post('/api/approvals/:id/approve', async ({ params, request }) => {
+    await delay(400)
+
+    const body = (await request.json()) as { comment?: string }
+    const matchedProject = mockProjects.find((project) => project.id === params.id)
+
+    if (!matchedProject) {
+      return HttpResponse.json(
+        { code: 404, message: '审批记录不存在', data: null },
+        { status: 404 },
+      )
+    }
+
+    if (
+      matchedProject.status !== PROJECT_STATUS.submitted &&
+      matchedProject.status !== PROJECT_STATUS.approving
+    ) {
+      return HttpResponse.json(
+        { code: 400, message: '当前状态不可审批通过', data: null },
+        { status: 400 },
+      )
+    }
+
+    matchedProject.status = PROJECT_STATUS.approved
+    matchedProject.approvalComment = body.comment?.trim() ?? '审批通过'
+    matchedProject.reviewedBy = '系统管理员'
+    matchedProject.reviewedAt = new Date().toISOString()
+    matchedProject.updatedAt = new Date().toISOString()
+
+    return HttpResponse.json({
+      code: 0,
+      message: '审批通过',
+      data: matchedProject,
+    })
+  }),
+
+  http.post('/api/approvals/:id/reject', async ({ params, request }) => {
+    await delay(400)
+
+    const body = (await request.json()) as { comment?: string }
+    const matchedProject = mockProjects.find((project) => project.id === params.id)
+
+    if (!matchedProject) {
+      return HttpResponse.json(
+        { code: 404, message: '审批记录不存在', data: null },
+        { status: 404 },
+      )
+    }
+
+    if (
+      matchedProject.status !== PROJECT_STATUS.submitted &&
+      matchedProject.status !== PROJECT_STATUS.approving
+    ) {
+      return HttpResponse.json(
+        { code: 400, message: '当前状态不可退回', data: null },
+        { status: 400 },
+      )
+    }
+
+    if (!body.comment?.trim()) {
+      return HttpResponse.json(
+        { code: 400, message: '退回时请填写审批意见', data: null },
+        { status: 400 },
+      )
+    }
+
+    matchedProject.status = PROJECT_STATUS.rejected
+    matchedProject.approvalComment = body.comment.trim()
+    matchedProject.reviewedBy = '系统管理员'
+    matchedProject.reviewedAt = new Date().toISOString()
+    matchedProject.updatedAt = new Date().toISOString()
+
+    return HttpResponse.json({
+      code: 0,
+      message: '已退回申请人',
+      data: matchedProject,
+    })
+  }),
+
   http.get('/api/projects/:id', async ({ params, request }) => {
     await delay(300)
 
