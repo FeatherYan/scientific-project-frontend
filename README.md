@@ -1,73 +1,256 @@
-# React + TypeScript + Vite
+# 科研项目管理平台 MVP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个用于前端面试展示的中后台项目 MVP，基于真实业务原型抽象而来。核心场景是高校教师或研究生发起科研项目申报，管理员进行审批，前端侧覆盖登录鉴权、角色权限、动态菜单、列表页、复杂表单、审批流、通知联动、请求封装和 Mock 接口等中后台高频能力点。
 
-Currently, two official plugins are available:
+## 项目目标
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+这个项目不是实现完整的科研管理系统，而是用一套清晰、可讲、可维护的前端架构，把中后台项目最典型的技术问题串成一个完整闭环，方便：
 
-## React Compiler
+- 面试展示
+- 个人练手
+- 讲解前端工程化和业务拆分思路
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 在线能力范围
 
-## Expanding the ESLint configuration
+当前 MVP 已完成以下核心模块：
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 登录页：普通用户 / 管理员双角色登录
+- 系统主布局：顶部导航、左侧菜单、角色驱动的动态菜单
+- 普通用户端：
+  - 可申报项目列表
+  - 可申报项目详情
+  - 项目申报表单页
+  - 我的申报
+- 管理员端：
+  - 审批列表
+  - 审批详情
+  - 审批通过 / 退回
+- 通知中心：
+  - 通知列表
+  - 已读状态
+  - 审批结果通知联动生成
+- 演示辅助：
+  - MSW Mock 接口
+  - Mock 数据 localStorage 持久化
+  - 一键重置演示数据
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 技术栈
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- React 19
+- TypeScript
+- Vite
+- Ant Design
+- React Router
+- Redux Toolkit
+- React Query
+- axios
+- MSW
+- dayjs
+- xlsx
+- ECharts
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+说明：
+
+- `Redux Toolkit` 仅管理登录态、用户信息、角色和权限等全局身份状态。
+- `React Query` 负责项目、审批、通知等服务端数据。
+- `MSW` 用于模拟接口，便于在没有真实后端的情况下完整演示业务链路。
+- 当前为了保证演示稳定性，Mock 数据使用 `localStorage` 做了前端侧持久化；真实工程中这些数据通常由后端写入数据库。
+
+## 核心业务流程
+
+### 普通用户
+
+1. 登录系统
+2. 查看可申报项目列表
+3. 进入项目详情
+4. 发起申报，生成草稿
+5. 在申报表单中保存草稿或提交
+6. 在“我的申报”中查看状态、继续编辑草稿或查看详情
+7. 在通知中心接收审批结果
+
+### 管理员
+
+1. 登录系统
+2. 查看审批列表
+3. 进入审批详情
+4. 审批通过或退回
+5. 系统自动更新申报状态并生成通知
+
+## 目录结构
+
+```txt
+src/
+  api/                  # 按业务模块拆分接口
+  app/                  # 应用级入口与 Provider
+  components/           # 通用组件 / 业务组件
+  constants/            # 常量与权限码
+  hooks/                # React Query 业务 hooks
+  layout/               # 登录布局 / 主布局
+  mocks/                # MSW handlers、mock data、mock storage
+  pages/                # 页面层
+  permission/           # 路由守卫、权限判断、动态菜单
+  request/              # axios 实例与拦截器
+  router/               # 路由配置
+  store/                # Redux Toolkit
+  types/                # TypeScript 类型
+  utils/                # 工具函数
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 架构设计
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+项目采用比较适合中后台面试讲解的分层方式：
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `request`：统一 axios 实例、拦截器、响应格式
+- `api`：按模块拆分请求函数
+- `hooks`：基于 React Query 封装查询和 mutation
+- `store`：只管理登录态、用户信息、角色与权限
+- `permission`：统一处理路由权限、菜单权限、按钮权限
+- `pages`：只负责页面组合和少量页面逻辑
+- `mocks`：模拟接口与演示态数据持久化
+
+对应的数据流大致为：
+
+```txt
+Page -> Hook -> API -> Request -> MSW / Backend
 ```
+
+## 权限设计
+
+当前采用简化版 RBAC：
+
+- `user`：普通用户
+- `admin`：管理员
+
+权限控制分三层：
+
+- 路由权限：控制能否访问页面
+- 菜单权限：控制左侧菜单展示
+- 按钮权限：控制操作按钮显示
+
+同时叠加业务状态控制，例如：
+
+- 草稿才能提交、删除
+- 草稿和已退回才能编辑
+- 审批中和已通过只能查看
+- 管理员只有在可审批状态下才能执行通过 / 退回
+
+## 状态管理策略
+
+### Redux Toolkit
+
+只管理全局身份状态：
+
+- token
+- 当前用户信息
+- 当前角色
+- 权限列表
+- 是否已登录
+
+### React Query
+
+管理服务端数据：
+
+- 项目列表 / 项目详情
+- 我的申报
+- 审批列表 / 审批详情
+- 通知列表
+
+### 页面本地状态
+
+管理页面级交互数据：
+
+- 搜索条件
+- 分页参数
+- 表单临时输入
+- 弹窗开关
+
+## 本地启动
+
+### 1. 安装依赖
+
+```bash
+npm install
+```
+
+如果你的 PowerShell 遇到 `npm.ps1` 执行策略问题，可以改用：
+
+```powershell
+npm.cmd install
+```
+
+### 2. 启动开发环境
+
+```bash
+npm run dev
+```
+
+或：
+
+```powershell
+npm.cmd run dev
+```
+
+### 3. 构建项目
+
+```bash
+npm run build
+```
+
+## Mock 登录账号
+
+- 普通用户：`teacher / 123456`
+- 管理员：`admin / 123456`
+
+## 演示建议
+
+可以按下面顺序演示：
+
+1. 用普通用户登录，进入可申报项目列表
+2. 查看项目详情并发起申报
+3. 在申报表单中保存草稿或提交
+4. 进入“我的申报”查看状态
+5. 切换管理员账号，进入审批列表和审批详情
+6. 审批通过或退回
+7. 切回普通用户，在通知中心查看审批结果通知
+
+如果需要快速恢复初始状态，可以使用右上角菜单中的 `重置演示数据`。
+
+## 关键页面
+
+- `/login`
+- `/projects/list`
+- `/projects/:id`
+- `/projects/:id/edit`
+- `/projects/mine`
+- `/approvals/list`
+- `/approvals/:id`
+- `/notifications`
+
+## 适合面试讲解的点
+
+- 为什么 Redux Toolkit 和 React Query 要分工
+- 如何做登录鉴权和路由守卫
+- 动态菜单如何和权限体系共用一套配置
+- 如何把“查看、编辑、提交、审批”这些动作和业务状态绑定
+- 为什么使用 `api + hooks + pages` 的三层拆分
+- 没有真实后端时，如何用 MSW 模拟完整业务闭环
+
+## 文档
+
+项目过程中整理了多轮开发说明，位于 `docs/` 目录。
+
+另外建议搭配阅读：
+
+- `docs/面试准备与技术拆解.md`
+
+## 后续可扩展方向
+
+- 增加统计分析页与 ECharts 图表
+- 补充分页参数与 URL 同步
+- 增加导出能力
+- 完善通用表格区、搜索区、空状态组件抽离
+- 接入真实后端 API
+
+## License
+
+当前仓库主要用于学习、演示和面试展示。
